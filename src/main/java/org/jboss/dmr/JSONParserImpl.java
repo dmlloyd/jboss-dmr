@@ -241,7 +241,11 @@ public class JSONParserImpl extends JSONParser {
 
     private ModelNode parseBase64(final String arg) {
         final ModelNode node = new ModelNode();
-        node.set(Base64.decode(arg));
+        try {
+            node.set(Base64.decode(arg));
+        } catch (IOException e) {
+            throw new RuntimeException("Base64 decoding failed:"+e.getMessage());
+        }
         return node;
     }
 

@@ -30,13 +30,16 @@ import java.io.DataOutputStream;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.InvalidObjectException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -1451,14 +1454,9 @@ public class ModelNode implements Externalizable, Cloneable {
      * @return the model node
      */
     public static ModelNode fromString(final String input) {
-        final ModelNodeParser parser = new ModelNodeParser();
         try {
-            parser.setInput(new ByteArrayInputStream(input.getBytes("US-ASCII")));
-            if (parser.yyParse() > 0) {
-                throw new IllegalArgumentException("DMR parser error");
-            }
-            return parser.getResult();
-        } catch (final IOException e) {
+            return new ModelNodeStringParser(new TrackingReader(new StringReader(input))).parseDocument();
+        } catch (IOException e) {
             final IllegalArgumentException n = new IllegalArgumentException(e.getMessage());
             n.setStackTrace(e.getStackTrace());
             throw n;
@@ -1488,12 +1486,7 @@ public class ModelNode implements Externalizable, Cloneable {
      * @return the model node
      */
     public static ModelNode fromStream(final InputStream stream) throws IOException {
-        final ModelNodeParser parser = new ModelNodeParser();
-        parser.setInput(stream);
-        if (parser.yyParse() > 0) {
-            throw new IOException("Parser error");
-        }
-        return parser.getResult();
+        return new ModelNodeStringParser(new TrackingReader(new InputStreamReader(stream, StandardCharsets.UTF_8))).parseDocument();
     }
 
     /**
